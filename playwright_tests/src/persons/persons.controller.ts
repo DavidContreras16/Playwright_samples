@@ -7,9 +7,10 @@ import {
   Param,
   Body,
   ParseIntPipe,
-  HttpCode,
+  Res,
   HttpStatus,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { PersonsService } from './persons.service';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
@@ -19,37 +20,51 @@ export class PersonsController {
   constructor(private readonly personsService: PersonsService) {}
 
   @Get()
-  findAll() {
-    return this.personsService.findAll();
+  findAll(@Res() res: Response) {
+    const persons = this.personsService.findAll();
+    return res.status(HttpStatus.OK).json(persons);
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.personsService.findOne(id);
+  findOne(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+    const person = this.personsService.findOne(id);
+    if (!person) {
+      return res.status(HttpStatus.NOT_FOUND).json({ message: `Person ${id} not found` });
+    }
+    return res.status(HttpStatus.OK).json(person);
   }
 
   @Post()
-  @HttpCode(HttpStatus.CREATED)
-  create(@Body() dto: CreatePersonDto) {
-    return this.personsService.create(dto);
+  create(@Body() dto: CreatePersonDto, @Res() res: Response) {
+    const person = this.personsService.create(dto);
+    return res.status(HttpStatus.CREATED).json(person);
   }
 
   @Put(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdatePersonDto) {
-    return this.personsService.update(id, dto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdatePersonDto,
+    @Res() res: Response,
+  ) {
+    const person = this.personsService.update(id, dto);
+    if (!person) {
+      return res.status(HttpStatus.NOT_FOUND).json({ message: `Person ${id} not found` });
+    }
+    return res.status(HttpStatus.OK).json(person);
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.personsService.remove(id);
+  remove(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+    const deleted = this.personsService.remove(id);
+    if (!deleted) {
+      return res.status(HttpStatus.NOT_FOUND).json({ message: `Person ${id} not found` });
+    }
+    return res.status(HttpStatus.NO_CONTENT).send();
   }
 
-  /** Endpoint de utilidad para tests: resetea el estado al seed inicial */
   @Post('reset')
-  @HttpCode(HttpStatus.OK)
-  reset() {
+  reset(@Res() res: Response) {
     this.personsService.reset();
-    return { message: 'Data reset to seed' };
+    return res.status(HttpStatus.OK).json({ message: 'Data reset to seed' });
   }
 }

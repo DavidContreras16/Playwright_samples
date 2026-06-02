@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Person } from './interfaces/person.interface';
 import { PERSONS_SEED } from './seed/persons.seed';
 import { CreatePersonDto } from './dto/create-person.dto';
@@ -13,33 +13,28 @@ export class PersonsService {
     return this.persons;
   }
 
-  findOne(id: number): Person {
-    const person = this.persons.find((p) => p.id === id);
-    if (!person) throw new NotFoundException(`Person with id ${id} not found`);
-    return person;
+  findOne(id: number): Person | null {
+    return this.persons.find((p) => p.id === id) ?? null;
   }
 
   create(dto: CreatePersonDto): Person {
-    const person: Person = {
-      id: this.nextId++,
-      active: true,
-      ...dto,
-    };
+    const person: Person = { id: this.nextId++, active: true, ...dto };
     this.persons.push(person);
     return person;
   }
 
-  update(id: number, dto: UpdatePersonDto): Person {
+  update(id: number, dto: UpdatePersonDto): Person | null {
     const index = this.persons.findIndex((p) => p.id === id);
-    if (index === -1) throw new NotFoundException(`Person with id ${id} not found`);
+    if (index === -1) return null;
     this.persons[index] = { ...this.persons[index], ...dto };
     return this.persons[index];
   }
 
-  remove(id: number): void {
+  remove(id: number): boolean {
     const index = this.persons.findIndex((p) => p.id === id);
-    if (index === -1) throw new NotFoundException(`Person with id ${id} not found`);
+    if (index === -1) return false;
     this.persons.splice(index, 1);
+    return true;
   }
 
   reset(): void {
