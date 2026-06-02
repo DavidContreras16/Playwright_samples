@@ -21,8 +21,6 @@ cd Playwright_samples/playwright_tests
 # 2. Instalar dependencias
 npm install
 
-# 3. Instalar el browser de Playwright (solo la primera vez)
-npx playwright install chromium
 ```
 
 ---
